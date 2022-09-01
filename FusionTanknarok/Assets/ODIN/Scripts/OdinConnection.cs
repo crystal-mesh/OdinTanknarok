@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using Fusion;
 using OdinNative.Odin;
+using OdinNative.Odin.Peer;
 using OdinNative.Odin.Room;
 using OdinNative.Unity.Audio;
 using UnityEngine;
@@ -12,57 +13,55 @@ namespace ODIN.Scripts
 {
     public class OdinConnection : MonoBehaviour
     {
-        [SerializeField] private string room = "Voice";
+        [SerializeField] private string roomName = "Voice";
         [SerializeField] private NetworkObject networkObject;
         [SerializeField] private PlaybackComponent playbackPrefab;
 
-
+        private bool _isLocalPlayer = false;
         private PlaybackComponent _spawnedPlayback;
+
         private void Start()
         {
-            OdinHandler.Instance.OnMediaAdded.AddListener(OnMediaAdded);
-            OdinHandler.Instance.OnPeerJoined.AddListener(OnPeerJoined);
-            OdinHandler.Instance.OnRoomJoined.AddListener(OnRoomJoined);
+            OdinHandler.Instance.OnCreatedMediaObject.AddListener(OnCreatedMediaObject);
+
             if (networkObject.HasInputAuthority)
             {
+                // TODO: Get Room name from fusion
+                _isLocalPlayer = true;
                 MyUserData roomData = new MyUserData();
                 roomData.fusionId = networkObject.Id.Raw;
-                OdinHandler.Instance.JoinRoom(room, roomData);
+                OdinHandler.Instance.JoinRoom(roomName, roomData);
             }
         }
 
-        private void OnRoomJoined(RoomJoinedEventArgs arg0)
+        private void OnCreatedMediaObject(string roomName, ulong peerId, long mediaId)
         {
-            Debug.Log("ODIN: On Room Joined!");
-        }
-
-        private void OnPeerJoined(object arg0, PeerJoinedEventArgs arg1)
-        {
-            Debug.Log("ODIN: On Peer Joined!");
-        }
-
-        private void OnMediaAdded(object roomObject, MediaAddedEventArgs eventArgs)
-        {
-            if (roomObject is Room room)
+            Room room = OdinHandler.Instance.Rooms[roomName];
+            Peer peer = room?.RemotePeers[peerId];
+            if (null != room && null != peer)
             {
-                MyUserData peerUserData = JsonUtility.FromJson<MyUserData>(eventArgs.Peer.UserData.ToString());
-                if (peerUserData.fusionId == networkObject.Id.Raw)
+                MyUserData peerUserData = JsonUtility.FromJson<MyUserData>(peer.UserData.ToString());
+                if (null != peerUserData && peerUserData.fusionId == networkObject.Id.Raw)
                 {
+                    if(_spawnedPlayback)
+                        Destroy(_spawnedPlayback.gameObject);
+                    
                     _spawnedPlayback = Instantiate(playbackPrefab, transform);
                     _spawnedPlayback.transform.localPosition = Vector3.zero;
                     _spawnedPlayback.RoomName = room.Config.Name;
-                    _spawnedPlayback.PeerId = eventArgs.PeerId;
-                    _spawnedPlayback.MediaStreamId = eventArgs.Media.Id;
+                    _spawnedPlayback.PeerId = peer.Id;
+                    _spawnedPlayback.MediaStreamId = mediaId;
                 }
             }
         }
-
+        
         private void OnDisable()
         {
-            if (_spawnedPlayback )
+            if(_spawnedPlayback)
+                Destroy(_spawnedPlayback.gameObject);
+            if (_isLocalPlayer )
             {
-                Destroy(_spawnedPlayback);
-                OdinHandler.Instance.LeaveRoom(room);
+                OdinHandler.Instance.LeaveRoom(roomName);
             }
         }
     }

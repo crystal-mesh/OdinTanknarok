@@ -3058,7 +3058,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2934162736403868161, guid: bf9dbdf4aa9351b419844c63d5c51a59, type: 3}
       propertyPath: EchoCanceller
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2934162736403868161, guid: bf9dbdf4aa9351b419844c63d5c51a59, type: 3}
       propertyPath: HighPassFilter
@@ -3067,6 +3067,14 @@ PrefabInstance:
     - target: {fileID: 2934162736403868161, guid: bf9dbdf4aa9351b419844c63d5c51a59, type: 3}
       propertyPath: TransientSuppressor
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2934162736403868161, guid: bf9dbdf4aa9351b419844c63d5c51a59, type: 3}
+      propertyPath: VolumeGateAttackLoudness
+      value: -40
+      objectReference: {fileID: 0}
+    - target: {fileID: 2934162736403868161, guid: bf9dbdf4aa9351b419844c63d5c51a59, type: 3}
+      propertyPath: VolumeGateReleaseLoudness
+      value: -50
       objectReference: {fileID: 0}
     - target: {fileID: 6809035309115017166, guid: bf9dbdf4aa9351b419844c63d5c51a59, type: 3}
       propertyPath: m_RootOrder
