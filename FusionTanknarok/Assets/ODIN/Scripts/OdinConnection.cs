@@ -23,12 +23,12 @@ namespace ODIN.Scripts
         private void Start()
         {
             OdinHandler.Instance.OnMediaAdded.AddListener(OnMediaAdded);
-            if (networkObject.HasInputAuthority)
+            _isLocalPlayer = networkObject.HasStateAuthority;
+            if (_isLocalPlayer)
             {
                 // TODO: Get Room name from fusion
-                _isLocalPlayer = true;
-                MyUserData roomData = new MyUserData();
-                roomData.FusionId = networkObject.Id.Raw;
+                CustomUserData roomData = new CustomUserData();
+                roomData.NetworkId = networkObject.Id.Raw;
                 OdinHandler.Instance.JoinRoom(roomName, roomData);
             }
         }
@@ -42,8 +42,8 @@ namespace ODIN.Scripts
             Peer peer = room?.RemotePeers[peerId];
             if (null != room && null != peer)
             {
-                MyUserData peerUserData = JsonUtility.FromJson<MyUserData>(peer.UserData.ToString());
-                if (null != peerUserData && peerUserData.FusionId == networkObject.Id.Raw)
+                CustomUserData peerUserData = JsonUtility.FromJson<CustomUserData>(peer.UserData.ToString());
+                if (null != peerUserData && peerUserData.NetworkId == networkObject.Id.Raw)
                 {
                     Debug.Log($" ---------------- ODIN: OnMediaAdded, found 3d playback candidate, room {room.Config.Name}, peer {arg1.PeerId}, media {arg1.Media.Id}---------------- ");
                     
@@ -60,7 +60,7 @@ namespace ODIN.Scripts
         }
 
         
-        private void OnDestroy()
+        private void OnDisable()
         {
             if(_spawnedPlayback)
                 Destroy(_spawnedPlayback.gameObject);
@@ -71,9 +71,9 @@ namespace ODIN.Scripts
         }
     }
 
-    public class MyUserData : IUserData
+    public class CustomUserData : IUserData
     {
-        public uint FusionId;
+        public uint NetworkId;
         
         public override string ToString()
         {
