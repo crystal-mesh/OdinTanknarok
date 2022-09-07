@@ -79,22 +79,59 @@ To test the project, we'll need create a Build and run it in parallel to the edi
 
 Congratulations, you've officially added Voice Chat to a Multiplayer Game! But right now it doesn't matter where the players are positioned - in fact, we can hear all players in the Start Screen, without having to enter the game. In a real game this would probably become quite chaotic quite fast, so let's improve that and switch to a Proximity Voice Chat.
 
-### Proximity Voice Chat
+## Proximity Voice Chat
 
-Because the Player object is alive during all gameplay situations, in which we want to allow proximity voice chat - i.e. the lobby and the game levels - TODO: Put logic on there.
+### Joining and leaving 
 
-Switch from automatic playback creation to manual playback creation in odin manager
+First, let's remove the TestConnection object from the MainScene, we won't need it anymore. Instead, we'll use the Player object itself to control when to join or leave a room. Because the Player object is automatically instantiated in the scenes that should allow Voice Chat - i.e. in the lobby and the gameplay levels - it's the perfect fit for us.
+
+You can find the Player prefab in `Assets > Prefabs > Game > PlayerTank`. Let's create a new script called `OdinPlayer` and add it to the __PlayerTank__ prefab root. This script will from now on handle joining and leaving the room, as well as allow us to implement the proximity voice chat.
+
+Just as before we'll create a string field to allow us to define the room name and join the ODIN room in `Start()`, but we'll also leave the room in `OnDestroy()`. Now the voice chat will only be active in the lobby and gameplay levels. But because the `PlayerTank` is instantiated for each player in the scene - both the remote and local players - the `JoinRoom` function will be called for each player that enters a lobby. We need a way to differentiate between our local player and the remote clients.
+
+We'll use Fusion's `NetworkObject` for this. This behaviour assigns a network identity to a `GameObject` and allows us to identify players in our game. We get a reference to the `NetworkObject` and store wether the player is local in our new `_isLocal` variable by requesting `networkObject.HasStateAuthority`. This will only be `true` on the local player. Before joining or leaving a room, we add a check for `_isLocal`. Your script should look something like this:
+
+```csharp
+using Fusion;
+using UnityEngine;
+
+public class OdinPlayer : MonoBehaviour
+{
+    [SerializeField] private string roomName = "Proximity";
+    private bool _isLocal;
+
+    private void Start()
+    {
+        NetworkObject networkObject = GetComponent<NetworkObject>();
+        _isLocal = networkObject.HasStateAuthority;
+        if(_isLocal)
+            OdinHandler.Instance.JoinRoom(roomName);
+    }
+
+    private void OnDestroy()
+    {
+        if(_isLocal)
+            OdinHandler.Instance.LeaveRoom(roomName);
+    }
+}
+```
+
+### Playback Prefab
+
+ODIN uses the default `AudioSource` behaviours to play back incoming voice streams. It seemlessly integrates into the Audio system and allows us to adjust all settings just as we're used to from Unity. The connection between these so called __Media Streams__ and the `AudioSource` behaviours is handled by the `Playback` component. Until now ODIN has automatically created and destroyed the components. But now we need more control over the `AudioSource` settings, especially the 3D sound options.
 
 Create a playback prefab
 Add Playback Component script
 Adjust Audio Source Settings to 3D
 
-Create a new script on player prefab
-Reference Network Object
 Create Custom User Data
 If local Player:
     Add Fusion Network Id to User Data
     Join Room
+
+Switch from automatic playback creation to manual playback creation in odin manager
+
+
 
 Reference Playback Prefab
 On Created Media Object: Instantiate playback prefab
