@@ -14,7 +14,7 @@ __Important:__ You need to select the directory that contains the __Assets__, __
 
 Select the Editor version you'd like to use and confirm the __Change Editor version?__ prompt. Please note that ODIN requires Unity version 2019.4 or later, but the Tanknarok project was created in 2020.3.35f1 - so we'll need to use that or any later version. In this guide we used version 2021.3.9f1.
 
-<img src="Documentation/OpenTanknarok.png" alt="Create a new project with the Unity Hub." width="50%">
+<img src="Documentation/OpenTanknarok.png" alt="Create a new project with the Unity Hub.">
 
 If you see another prompt __Opening Project in Non-Matching Editor Installation__, click the __Continue__ button to convert your project.
 
@@ -22,7 +22,7 @@ After opening up, you'll be greeted by the __Welcome to Photon Fusion__ prompt, 
 
 If you've accidentally closed the Photon Fusion Hub you can open it up again by selection `Fusion > Fusion Hub` from the Unity Editor menus or press __Alt+F__.
 
-<img src="Documentation/FusionId.png" alt="The Photon Hub with a valid Fusion Id" width="50%">
+<img src="Documentation/FusionId.png" alt="The Photon Hub with a valid Fusion Id">
 
 Great - now we've got the base project set up, let's take a look at the interesting stuff: Getting Voice Chat into a game.
 
@@ -75,7 +75,7 @@ For now, we only want to join a room, so the __OdinConnectionTest__ script is en
 
 To test the project, we'll need create a Build and run it in parallel to the editor. This way we can test everything on the same computer. Press `Ctrl+Shift+B` or use the `File > Build Settings...` menu to show the Build Settings window. Make sure that the __MainScene__, __Lobby__, __Level1__ and __Level2__ scenes are shown and selected in the build list. Click on __Build And Run__, select a directory in which your binaries will be created and wait until the Build was started. Switch to the Editor, press play and you should now be able to hear your own voice transmitted via ODIN.
 
-<img src="Documentation/BuildSettings.png" width="50%">
+<img src="Documentation/BuildSettings.png">
 
 Congratulations, you've officially added Voice Chat to a Multiplayer Game! But right now it doesn't matter where the players are positioned - in fact, we can hear all players in the Start Screen, without having to enter the game. In a real game this would probably become quite chaotic quite fast, so let's improve that and switch to a Proximity Voice Chat.
 
@@ -269,4 +269,4 @@ OdinHandler.Instance.JoinRoom(combinedName, roomData);
 
 You might also have noticed, that the game's music and sound effects are kind of loud. We can easily fix this, by navigating to `Assets > Audio > Mixer` and adjusting the volume settings of the `Master`, `Music` or `SFX` mixers. You could also create a new Audio Group for the in game voice, link it to the Playback Prefab's `AudioSource` we created and fine tune the voice chat volume. This way you can also easily implement UI controls to allow players to adjust the volume in-game.
 
-There are also issues that go beyond the scope of this tutorial. You might have noticed, that the direction a voice comes from sometimes does not exactly match what you'd expect. Unity's Audio system assumes the listener to always be at the location of the `AudioListener` script. In the __Tanknarok__ sample project, this script is positioned on the `CameraParnet` game object, which represents the position the camera should look at. The position of this object does not always match the player location. To improve this, we'd have to add an `AudioListener` script to the local players gameobject and deactivate the existing behaviour (Unity requires you to always have only one active `AudioListener`). If you'd like us to add the solution to this tutorial or have other feedback, [let us know on the discord server](https://discord.gg/9yzdJNUGZS)!
+There are also issues that go beyond the scope of this tutorial. You might have noticed, that the direction a voice comes from sometimes does not exactly match what you'd expect. Unity's Audio system assumes the listener to always be at the location of the `AudioListener` script. In the __Tanknarok__ sample project, this script is positioned on the `CameraParent` game object, which represents the position the camera should look at. The position of this object does not always match the player location. To improve this, we'd have to add an `AudioListener` script to the local players gameobject and deactivate the existing behaviour (Unity requires you to always have only one active `AudioListener`). If you'd like us to add the solution to this tutorial or have other feedback, [let us know on the discord server](https://discord.gg/9yzdJNUGZS)!
