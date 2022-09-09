@@ -12,7 +12,6 @@ public class OdinRemote : MonoBehaviour
     private void Start()
     {
         OdinHandler.Instance.OnMediaAdded.AddListener(MediaAdded);
-        OdinHandler.Instance.CreatePlayback = false;
     }
     private void MediaAdded(object roomObject, MediaAddedEventArgs eventArgs)
     {
@@ -23,7 +22,8 @@ public class OdinRemote : MonoBehaviour
             Peer peer = room.RemotePeers[peerId];
             CustomUserData userData = JsonUtility.FromJson<CustomUserData>(peer.UserData.ToString());
             NetworkObject networkObject = GetComponent<NetworkObject>();
-            if (userData.NetworkId == networkObject.Id.Raw)
+            bool isLocalPlayer = networkObject.HasStateAuthority;
+            if (!isLocalPlayer && userData.NetworkId == networkObject.Id.Raw)
             {
                 _spawnedPlayback = Instantiate(playbackPrefab, transform);
                 _spawnedPlayback.transform.localPosition = Vector3.zero;

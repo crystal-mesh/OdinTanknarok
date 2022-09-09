@@ -18,8 +18,9 @@ public class OdinLocal : MonoBehaviour
                 NetworkId = networkObject.Id.Raw
             };
 
-            string combinedName = networkObject.Runner.SessionInfo.Name + "_" + roomName;
-            OdinHandler.Instance.JoinRoom(combinedName, roomData);
+            // use this, if you'd like differentiate between photon fusion rooms when joining an odin room.
+            // string combinedName = networkObject.Runner.SessionInfo.Name + "_" + roomName;
+            OdinHandler.Instance.JoinRoom(roomName, roomData);
         }
     }
     private void OnDestroy()

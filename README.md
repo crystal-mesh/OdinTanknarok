@@ -28,11 +28,15 @@ Great - now we've got the base project set up, let's take a look at the interest
 
 ## ODIN installation
 
-First, let's install ODIN into our project. ODIN can be imported using either a `.unitypackage` or by using Unity's Package Manager and Git. We recommend the latter, because it is easier to keep ODIN up to date. If you don't have Git set up, you can still fall back to the Unity package.
+First, let's install ODIN into our project. ODIN can be imported using either a `.unitypackage` or by using Unity's Package Manager and Git. We recommend the the package manager, because it is easier to keep ODIN up to date. If you don't have Git set up, you can still fall back to the Unity package.
 
 ### Package Manager
 
-Select `Window > PackageManager` to open up Unity's package manager. In the top left, select the `+` symbol to add a new package and select __Add package from git URL__. Use the URL `https://github.com/4Players/odin-sdk-unity.git` and select __Add__. The Package Manager will now download the newest release and resolve any dependencies.
+Select `Window > PackageManager` to open up Unity's package manager. In the top left, select the `+` symbol to add a new package and select __Add package from git URL__. Use the URL 
+
+`https://github.com/4Players/odin-sdk-unity.git` 
+
+and select __Add__. The Package Manager will now download the newest release and resolve any dependencies.
 
 ### Unity Package
 
@@ -144,20 +148,26 @@ public class OdinRemote : MonoBehaviour
     private void Start()
     {
         OdinHandler.Instance.OnMediaAdded.AddListener(MediaAdded);
-        OdinHandler.Instance.CreatePlayback = false;
     }
 
     private void MediaAdded(object roomObject, MediaAddedEventArgs eventArgs)
     {
         ulong peerId = eventArgs.PeerId;
         long mediaId = eventArgs.Media.Id;
+        
         if (roomObject is Room room)
         {
-            _spawnedPlayback = Instantiate(playbackPrefab, transform);
-            _spawnedPlayback.transform.localPosition = Vector3.zero;
-            _spawnedPlayback.RoomName = room.Config.Name;
-            _spawnedPlayback.PeerId = peerId;
-            _spawnedPlayback.MediaStreamId = mediaId;
+            NetworkObject networkObject = GetComponent<NetworkObject>();
+            bool isLocalPlayer = networkObject.HasStateAuthority;
+
+            if(!isLocalPlayer){
+                _spawnedPlayback = Instantiate(playbackPrefab, transform);
+                _spawnedPlayback.transform.localPosition = Vector3.zero;
+                _spawnedPlayback.RoomName = room.Config.Name;
+                _spawnedPlayback.PeerId = peerId;
+                _spawnedPlayback.MediaStreamId = mediaId;
+            }
+            
         }
     }
     
@@ -168,9 +178,11 @@ public class OdinRemote : MonoBehaviour
     }
 }
 ```
-We retrieve the peer id and the media id from the `MediaAddedEventArgs` and the room name from the `Room` object, after casting. It's important to instantiate the Playback Prefab as a child of the Player object and to reset the local position, to ensure that the `AudioSource` emits sound from the correct position.
+We retrieve the peer id and the media id from the `MediaAddedEventArgs` and the room name from the `Room` object, after casting. It's important to instantiate the Playback Prefab as a child of the Player object and to reset the local position, to ensure that the `AudioSource` emits sound from the correct position. We also make sure, that we only spawn Playback components for remote players, we don't want to listen to the local player's voice.
 
-Finally, we need disable the automatic playback spawning of the `OdinHandler`. We can either activate the `Manual positional audio` setting on our __OdinManager__ object in the scene, or set `OdinHandler.Instance.CreatePlayback` to false.
+Finally, we need disable the automatic playback spawning of the `OdinHandler`. We have to activate the `Manual positional audio` setting on our __OdinManager__ object in the scene.
+
+<img src="Documentation/ManualPositionalAudio.png">
 
 __Please Note:__ Some implementation choices in the `OdinRemote` script are due to the way the __Tanknarok__ project is set up and to keep the code as short and simple as possible. The sample project does not destroy remote player objects, but instead chooses to reuse them when a remote player rejoins a lobby or game. Therefore we keep track of the spawned playback object and destroy it manually in `OnDisable`.
 
@@ -237,19 +249,24 @@ private void MediaAdded(object roomObject, MediaAddedEventArgs eventArgs)
         long mediaId = eventArgs.Media.Id;
         if (roomObject is Room room)
         {
-            Peer peer = room.RemotePeers[peerId];
-            CustomUserData userData = JsonUtility.FromJson<CustomUserData>(peer.UserData.ToString());
-            NetworkObject networkObject = GetComponent<NetworkObject>();
-            if (userData.NetworkId == networkObject.Id.Raw)
+            ulong peerId = eventArgs.PeerId;
+            long mediaId = eventArgs.Media.Id;
+            if (roomObject is Room room)
             {
-                _spawnedPlayback = Instantiate(playbackPrefab, transform);
-                _spawnedPlayback.transform.localPosition = Vector3.zero;
-                _spawnedPlayback.RoomName = room.Config.Name;
-                _spawnedPlayback.PeerId = peerId;
-                _spawnedPlayback.MediaStreamId = mediaId;
+                Peer peer = room.RemotePeers[peerId];
+                CustomUserData userData = JsonUtility.FromJson<CustomUserData>(peer.UserData.ToString());
+                NetworkObject networkObject = GetComponent<NetworkObject>();
+                bool isLocalPlayer = networkObject.HasStateAuthority;
+                if (!isLocalPlayer && userData.NetworkId == networkObject.Id.Raw)
+                {
+                    _spawnedPlayback = Instantiate(playbackPrefab, transform);
+                    _spawnedPlayback.transform.localPosition = Vector3.zero;
+                    _spawnedPlayback.RoomName = room.Config.Name;
+                    _spawnedPlayback.PeerId = peerId;
+                    _spawnedPlayback.MediaStreamId = mediaId;
+                }
             }
         }
-    }
 ...
 ```
 We first retrieve the `Peer` object from the rooms `RemotePeers` array with the peer id. The array contains a list of all remote peers connected to the ODIN room. The peer allows us to access the user data as a generic `UserData` object, so we need ot convert it into our `CustomUserData` format, before we can use it. The `JsonUtility` reads the string representation of the generic object and converts it into our custom format. Finally, we get a reference to the `NetworkObject` script and compare the Id to the `NetworkId` stored in the user data object. If it's equal, we know that the newly added Media Stream belongs to the player object.
