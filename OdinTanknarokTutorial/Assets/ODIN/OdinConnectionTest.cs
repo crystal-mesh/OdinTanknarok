@@ -1,10 +1,13 @@
 using UnityEngine;
 
-public class OdinConnectionTest : MonoBehaviour
+namespace ODIN
 {
-    [SerializeField] private string roomName;
-    void Start()
+    public class OdinConnectionTest : MonoBehaviour
     {
-        OdinHandler.Instance.JoinRoom(roomName);    
+        [SerializeField] private string roomName;
+        void Start()
+        {
+            OdinHandler.Instance.JoinRoom(roomName);    
+        }
     }
 }
